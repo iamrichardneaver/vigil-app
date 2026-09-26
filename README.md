@@ -6,9 +6,9 @@ A continuous multi-agent system built with **IBM Bob 2.0** that monitors a repos
 - AI-generated code risk
 - architectural invariant violations
 
-Vigil scans the project, explains the blast radius, proposes the smallest safe fix, and can apply known patches from the CLI or a simple dashboard.
+Vigil scans the project, explains the impact, proposes the smallest safe fix, and can apply known patches from the CLI or a simple dashboard.
 
-This project was built for the IBM Bob 2.0 Hackathon theme: **Build with purpose using IBM Bob 2.0**, focused on the **application maintenance** workflow.
+This project was built for the IBM Bob 2.0 Hackathon theme **Build with purpose using IBM Bob 2.0**, focused on the **application maintenance** workflow.
 
 ## Problem
 
@@ -24,8 +24,8 @@ The result is slow review, rework, and preventable production risk.
 
 Vigil keeps a living model of the repository and runs four specialized agents under a Supervisor:
 
-1. **Drift Scanner** — declared vs resolved dependencies, unpinned ranges, watch-list packages
-2. **AI-Code Risk Agent** — hardcoded secrets, inline auth, mixed I/O, unguarded async, leftover console output
+1. **Drift Scanner** — declared vs resolved dependencies, unpinned ranges, and watch-list packages
+2. **AI-Code Risk Agent** — hardcoded secrets, inline auth, mixed I/O, unguarded async calls, and leftover console output
 3. **Invariant Guardian** — enforces rules from `ARCHITECTURE.md` and `docs/invariants.md`
 4. **Healing & Documentation Agent** — turns findings into concrete fix proposals and checks whether architecture docs still cover active rules
 
@@ -40,11 +40,25 @@ A deterministic fix engine can apply known safe patches. The same report is avai
 IBM Bob IDE was the core development partner for this project.
 
 - Full repository context was used to read `package.json`, source files, and architecture documents
-- Agent mode, parallel tasks, and subagents were used to design and implement the Supervisor plus the four Vigil agents
+- Agent mode, parallel tasks, and subagents were used to design and implement the Supervisor and the four Vigil agents
 - Document understanding was used to extract architectural invariants from `ARCHITECTURE.md` and `docs/invariants.md`
 - Bob task session summaries are included in `bob_sessions/` as required submission evidence
 
 Bob was used to build and refine the system, not only to autocomplete snippets.
+
+## Demo
+
+Dashboard screenshot:
+
+![Vigil admin dashboard](demo/vigil-dashboard.png)
+
+Start the dashboard with:
+
+```bash
+node vigil/cli.js serve
+```
+
+Then open http://localhost:3000/
 
 ## Repository layout
 
@@ -52,13 +66,144 @@ Bob was used to build and refine the system, not only to autocomplete snippets.
 vigil-sample-app/
 ├── ARCHITECTURE.md
 ├── docs/invariants.md
-├── src/                         # sample application under watch
+├── src/
 ├── vigil/
 │   ├── living-model.md
-│   ├── agents/                  # Supervisor + 4 agents
-│   ├── fixes/apply.js           # deterministic patch engine
-│   ├── cli.js                   # vigil scan | report | fix | status | serve
-│   ├── server.js                # API + dashboard
+│   ├── agents/
+│   ├── fixes/
+│   ├── cli.js
+│   ├── server.js
 │   └── public/index.html
-├── bob_sessions/                # required Bob task summaries
+├── demo/
+├── bob_sessions/
 └── README.md
+```
+
+## Requirements
+
+- Node.js 18+
+- npm
+
+Do not commit `node_modules`.
+
+## Setup
+
+```bash
+git clone https://github.com/YOUR-USERNAME/vigil-sample-app.git
+cd vigil-sample-app
+npm install
+```
+
+## Commands
+
+Scan the repository:
+
+```bash
+node vigil/cli.js scan --verbose
+```
+
+Show the last saved report:
+
+```bash
+node vigil/cli.js status
+```
+
+Preview safe fixes without writing files:
+
+```bash
+node vigil/cli.js fix --dry-run
+```
+
+Apply safe fixes:
+
+```bash
+node vigil/cli.js fix
+```
+
+Apply one rule only:
+
+```bash
+node vigil/cli.js fix --rule ARCH-002
+```
+
+Start the dashboard and API:
+
+```bash
+node vigil/cli.js serve
+```
+
+Then open:
+
+- Admin UI: http://localhost:3000/
+- Report API: http://localhost:3000/api/vigil/report
+- Health API: http://localhost:3000/api/vigil/health
+
+The original agent entry point still works:
+
+```bash
+node vigil/agents/index.js --verbose
+```
+
+npm scripts:
+
+```bash
+npm run scan
+npm run fix:dry
+npm start
+```
+
+## API
+
+| Method | Path | Purpose |
+| ------ | ---- | ------- |
+| GET | `/api/vigil/health` | Service health |
+| GET | `/api/vigil/report` | Run agents and return the JSON report |
+| POST | `/api/vigil/fix` | Apply or dry-run safe patches |
+
+Examples:
+
+```bash
+curl http://localhost:3000/api/vigil/health
+curl http://localhost:3000/api/vigil/report
+curl -X POST http://localhost:3000/api/vigil/fix -H "Content-Type: application/json" -d "{\"dryRun\":true}"
+```
+
+## What the sample app contains
+
+The sample app is a small Express service used as the codebase under watch. It originally included planted maintenance issues:
+
+- payment orchestration mixed into the controller
+- a direct axios call from a route handler
+- a weak inline token check
+- a hardcoded JWT secret
+- unpinned dependency ranges
+
+Vigil detected those issues, proposed fixes, and applied the safe patches. A later scan reports **0 FAIL**, with remaining **WARN** findings limited to dependency policy review.
+
+## Measurable impact
+
+On this sample repository:
+
+- Time to identify architectural and AI-code issues dropped from a manual file-by-file review to a single command
+- Original high-severity issues were reduced to **0 FAIL**
+- Remaining findings are explicit dependency warnings with recommended pins
+- The same report is available in CLI, JSON, and UI
+- The scan returns exit code `1` when FAIL or ERROR exists, so it can be used in CI
+
+## Hackathon evidence
+
+Required Bob task session summaries are stored in `bob_sessions/`.
+
+These screenshots document Bob usage for:
+
+1. repository analysis and agent construction
+2. CLI, API, UI, and fix-engine implementation
+3. detector and status consistency fixes
+
+## Data note
+
+This repository uses only synthetic sample code created for the hackathon. It contains no client data, no personal information, and no confidential datasets.
+
+## License
+
+This hackathon prototype is provided as-is for evaluation.
