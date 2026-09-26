@@ -1,41 +1,41 @@
 {
   "version": "1.0",
   "project": "vigil-app",
-  "ranAt": "2026-09-26T07:58:36.740Z",
-  "overallStatus": "WARN",
+  "ranAt": "2026-09-26T09:25:39.119Z",
+  "overallStatus": "FAIL",
   "agents": [
     {
       "agentId": "invariant-guardian",
       "agentName": "Invariant Guardian",
-      "ranAt": "2026-09-26T07:58:36.727Z",
-      "overallStatus": "PASS",
+      "ranAt": "2026-09-26T09:25:39.076Z",
+      "overallStatus": "FAIL",
       "findings": [
         {
           "ruleId": "ARCH-001",
-          "status": "PASS",
-          "title": "Payment logic is correctly isolated in src/payment.js",
-          "detail": "Rule satisfied.",
-          "file": null,
-          "line": null,
-          "snippet": null
+          "status": "FAIL",
+          "title": "Payment orchestration logic in controller (src/index.js)",
+          "detail": "src/index.js contains payment orchestration code (rate fetching, currency conversion, or direct charge calls). This logic must be fully encapsulated in src/payment.js. The controller should only call processPayment().",
+          "file": "src/index.js",
+          "line": 22,
+          "snippet": "const rate = await axios.get('https://api.exchangerate.host/latest');"
         },
         {
           "ruleId": "ARCH-002",
-          "status": "PASS",
-          "title": "No direct axios calls found in controller",
-          "detail": "Rule satisfied.",
-          "file": null,
-          "line": null,
-          "snippet": null
+          "status": "FAIL",
+          "title": "Direct axios call in controller",
+          "detail": "src/index.js calls axios directly inside a route handler. External HTTP calls must go through a dedicated service module (e.g. src/services/exchangeRateService.js).",
+          "file": "src/index.js",
+          "line": 22,
+          "snippet": "const rate = await axios.get('https://api.exchangerate.host/latest');"
         },
         {
           "ruleId": "ARCH-003",
-          "status": "PASS",
-          "title": "All JWT verification goes through utils.verifyToken()",
-          "detail": "Rule satisfied.",
-          "file": null,
-          "line": null,
-          "snippet": null
+          "status": "WARN",
+          "title": "Weak inline token guard — verifyToken() not called",
+          "detail": "src/index.js performs a manual token check (e.g. length test) instead of calling utils.verifyToken(). This bypasses proper JWT signature verification.",
+          "file": "src/index.js",
+          "line": 17,
+          "snippet": "if (!token || token.length < 10) {"
         },
         {
           "ruleId": "ARCH-004",
@@ -52,7 +52,7 @@
     {
       "agentId": "drift-scanner",
       "agentName": "Drift Scanner",
-      "ranAt": "2026-09-26T07:58:36.736Z",
+      "ranAt": "2026-09-26T09:25:39.102Z",
       "overallStatus": "WARN",
       "findings": [
         {
@@ -160,17 +160,17 @@
     {
       "agentId": "ai-code-risk",
       "agentName": "AI-Code Risk",
-      "ranAt": "2026-09-26T07:58:36.740Z",
-      "overallStatus": "PASS",
+      "ranAt": "2026-09-26T09:25:39.115Z",
+      "overallStatus": "FAIL",
       "findings": [
         {
           "ruleId": "AICR-001",
-          "status": "PASS",
-          "title": "No hardcoded secrets detected",
-          "detail": "Rule satisfied.",
-          "file": null,
-          "line": null,
-          "snippet": null
+          "status": "FAIL",
+          "title": "Hardcoded secret — JWT secret as string literal",
+          "detail": "\"src\\utils.js\" contains a hardcoded credential. Secrets must be read from environment variables (process.env.SECRET_NAME). Never commit credentials to source control.",
+          "file": "src\\utils.js",
+          "line": 7,
+          "snippet": "return jwt.verify(token, 'secret-key');"
         },
         {
           "ruleId": "AICR-002",
@@ -183,21 +183,21 @@
         },
         {
           "ruleId": "AICR-003",
-          "status": "PASS",
-          "title": "No mixed HTTP-call-and-processing patterns found",
-          "detail": "Rule satisfied.",
-          "file": null,
-          "line": null,
-          "snippet": null
+          "status": "FAIL",
+          "title": "HTTP call mixed with business logic — axios response assigned directly in handler",
+          "detail": "\"src\\index.js\" makes an external HTTP call and processes the result in the same scope. Extract the HTTP call into a dedicated service module to separate I/O from computation (see ARCH-002).",
+          "file": "src\\index.js",
+          "line": 22,
+          "snippet": "const rate = await axios.get('https://api.exchangerate.host/latest');"
         },
         {
           "ruleId": "AICR-004",
-          "status": "PASS",
-          "title": "No unguarded async calls detected",
-          "detail": "Rule satisfied.",
-          "file": null,
-          "line": null,
-          "snippet": null
+          "status": "WARN",
+          "title": "Unguarded async call — no surrounding try/catch",
+          "detail": "\"src\\index.js\" awaits an axios call without a try/catch block. A network failure or non-2xx response will throw an unhandled rejection, crashing the request or the process. Wrap in try/catch or add a .catch() handler.",
+          "file": "src\\index.js",
+          "line": 22,
+          "snippet": "const rate = await axios.get('https://api.exchangerate.host/latest');"
         },
         {
           "ruleId": "AICR-005",
@@ -210,12 +210,12 @@
         },
         {
           "ruleId": "AICR-006",
-          "status": "PASS",
-          "title": "No console.log calls found in source files",
-          "detail": "Rule satisfied.",
-          "file": null,
-          "line": null,
-          "snippet": null
+          "status": "WARN",
+          "title": "console.log in production source",
+          "detail": "\"src\\index.js\" contains a console statement. Debug output in production may leak internal state or sensitive values. Use a structured logger.",
+          "file": "src\\index.js",
+          "line": 28,
+          "snippet": "console.log('Server running on port 3000');"
         }
       ],
       "errors": []
@@ -223,9 +223,36 @@
     {
       "agentId": "healing-doc",
       "agentName": "Healing & Documentation",
-      "ranAt": "2026-09-26T07:58:36.740Z",
-      "overallStatus": "WARN",
+      "ranAt": "2026-09-26T09:25:39.119Z",
+      "overallStatus": "FAIL",
       "findings": [
+        {
+          "ruleId": "HEAL-ARCH-001",
+          "status": "WARN",
+          "title": "Fix proposal for ARCH-001: Payment logic isolation",
+          "detail": "Move the payment orchestration out of the route handler in src/index.js. The route handler should only call a single function from src/payment.js and return its result. All rate-fetching, token-validation, and amount conversion must be delegated to the appropriate module.",
+          "file": "src/index.js",
+          "line": 22,
+          "snippet": "Suggested change:\n// src/index.js — after fix\napp.post('/pay', async (req, res) => {\n  const decoded = verifyToken(req.headers.authorization);\n  if (!decoded) return res.status(401).json({ error: 'Unauthorized' });\n  const result = await processPayment(req.body.amount);\n  res.json(result);\n});\n// src/payment.js — fetch the rate inside processPayment\nconst exchangeRateService = require('./services/exchangeRateService');\nasync function processPayment(amount) {\n  const rate = await exchangeRateService.getUsdRate();\n  return { original: amount, converted: amount * rate, status: 'processed' };\n}"
+        },
+        {
+          "ruleId": "HEAL-ARCH-002",
+          "status": "WARN",
+          "title": "Fix proposal for ARCH-002: No direct HTTP calls in controllers",
+          "detail": "Create src/services/exchangeRateService.js with a single exported async function getUsdRate(). Move the axios.get() call into that function. In src/index.js, require the service and call it instead of calling axios directly.",
+          "file": "src/index.js",
+          "line": 22,
+          "snippet": "Suggested change:\n// src/services/exchangeRateService.js\nconst axios = require('axios');\nasync function getUsdRate() {\n  const res = await axios.get('https://api.exchangerate.host/latest');\n  return res.data.rates.USD;\n}\nmodule.exports = { getUsdRate };"
+        },
+        {
+          "ruleId": "HEAL-ARCH-003",
+          "status": "WARN",
+          "title": "Fix proposal for ARCH-003: Central auth helper",
+          "detail": "In src/index.js, replace the inline token length check with a call to verifyToken() (already imported from ./utils). If verifyToken returns null the token is invalid — return 401. Remove the manual length check.",
+          "file": "src/index.js",
+          "line": 17,
+          "snippet": "Suggested change:\n// src/index.js — after fix\nconst decoded = verifyToken(req.headers.authorization);\nif (!decoded) return res.status(401).json({ error: 'Unauthorized' });"
+        },
         {
           "ruleId": "HEAL-DRIFT-001",
           "status": "WARN",
@@ -254,6 +281,42 @@
           "snippet": null
         },
         {
+          "ruleId": "HEAL-AICR-001",
+          "status": "WARN",
+          "title": "Fix proposal for AICR-001: Hardcoded secret",
+          "detail": "Replace the string literal with process.env.<SECRET_NAME>. Add the variable to a .env.example file (no real value) and document it in the README. Add .env to .gitignore.",
+          "file": "src\\utils.js",
+          "line": 7,
+          "snippet": "Suggested change:\n// Before:\njwt.verify(token, 'secret-key')\n// After:\njwt.verify(token, process.env.JWT_SECRET)"
+        },
+        {
+          "ruleId": "HEAL-AICR-003",
+          "status": "WARN",
+          "title": "Fix proposal for AICR-003: HTTP call mixed with business logic",
+          "detail": "Extract the axios call into a dedicated service module (see ARCH-002 fix). The route handler should receive a plain value from the service, not a raw axios response object.",
+          "file": "src\\index.js",
+          "line": 22,
+          "snippet": null
+        },
+        {
+          "ruleId": "HEAL-AICR-004",
+          "status": "WARN",
+          "title": "Fix proposal for AICR-004: Unguarded async call",
+          "detail": "Wrap the await call in a try/catch block. On catch, log the error and return an appropriate HTTP error response (e.g. 502 Bad Gateway for upstream service failures).",
+          "file": "src\\index.js",
+          "line": 22,
+          "snippet": "Suggested change:\ntry {\n  const rate = await exchangeRateService.getUsdRate();\n} catch (err) {\n  return res.status(502).json({ error: 'Exchange rate unavailable' });\n}"
+        },
+        {
+          "ruleId": "HEAL-AICR-006",
+          "status": "WARN",
+          "title": "Fix proposal for AICR-006: console.log in production",
+          "detail": "Replace console.log calls with a structured logger (e.g. pino or winston). If the statement is only for debugging, remove it entirely.",
+          "file": "src\\index.js",
+          "line": 28,
+          "snippet": null
+        },
+        {
           "ruleId": "HEAL-DOC-001",
           "status": "PASS",
           "title": "ARCHITECTURE.md covers all active violation areas",
@@ -264,9 +327,9 @@
         },
         {
           "ruleId": "HEAL-SUMMARY",
-          "status": "WARN",
-          "title": "Health summary: 0 FAIL  9 WARN  12 PASS across all agents",
-          "detail": "Total findings from prior agents — FAIL: 0, WARN: 9, PASS: 12. Review WARN findings and decide which to address.",
+          "status": "FAIL",
+          "title": "Health summary: 4 FAIL  12 WARN  5 PASS across all agents",
+          "detail": "Total findings from prior agents — FAIL: 4, WARN: 12, PASS: 5. Address all FAIL findings before merging.",
           "file": null,
           "line": null,
           "snippet": null

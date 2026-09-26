@@ -36,6 +36,38 @@ const { dryRun, applyFixes, PATCHES } = require('./fixes/apply');
 const VIGIL_DIR = __dirname;          // vigil/
 const REPO_ROOT = path.resolve(VIGIL_DIR, '..');
 
+const HISTORY_PATH = path.join(VIGIL_DIR, 'history.json');
+
+/**
+ * Count FAIL/WARN/PASS across all agent findings in a report.
+ * @param {import('./agents/types').VigilReport} report
+ * @returns {{ fail: number, warn: number, pass: number }}
+ */
+function countReport(report) {
+  let fail = 0, warn = 0, pass = 0;
+  for (const agent of report.agents) {
+    for (const f of agent.findings) {
+      if (f.status === 'FAIL') fail++;
+      else if (f.status === 'WARN') warn++;
+      else if (f.status === 'PASS') pass++;
+    }
+  }
+  return { fail, warn, pass };
+}
+
+/**
+ * Append an event to vigil/history.json (creates it if absent).
+ * @param {{ type: string, overallStatus: string, fail: number, warn: number, pass: number, notes?: string, fixes?: string[] }} event
+ */
+function appendHistory(event) {
+  let events = [];
+  if (fs.existsSync(HISTORY_PATH)) {
+    try { events = JSON.parse(fs.readFileSync(HISTORY_PATH, 'utf8')); } catch { events = []; }
+  }
+  events.push(Object.assign({ at: new Date().toISOString(), fixes: [] }, event));
+  fs.writeFileSync(HISTORY_PATH, JSON.stringify(events, null, 2), 'utf8');
+}
+
 /**
  * Build and run a Supervisor with all four agents.
  * @param {{ rootDir: string, verbose: boolean, silent: boolean }} opts
@@ -97,6 +129,10 @@ async function cmdScan(flags) {
   // Always persist the latest report so `vigil status` reflects the last scan.
   const reportPath = path.join(VIGIL_DIR, 'last-report.json');
   fs.writeFileSync(reportPath, JSON.stringify(report, null, 2), 'utf8');
+
+  // Append to history
+  const { fail, warn, pass } = countReport(report);
+  appendHistory({ type: 'scan', overallStatus: report.overallStatus, fail, warn, pass });
 
   if (json) {
     process.stdout.write(JSON.stringify(report, null, 2) + '\n');
@@ -187,12 +223,26 @@ async function cmdFix(flags) {
     console.log(` Fix complete.  ${appliedCount} patch(es) applied,  ${skippedCount} already clean.`);
     if (appliedCount > 0) {
       console.log(` Log saved → ${path.join(VIGIL_DIR, 'last-fixes.json')}`);
+      // Append fix event to history
+      const appliedRules = results
+        .filter(r => r.applicable)
+        .map(r => r.ruleIds);
+      appendHistory({
+        type: 'fix',
+        overallStatus: 'N/A',
+        fail: 0, warn: 0, pass: 0,
+        notes: `Applied ${appliedCount} patch(es): ${appliedRules.join('; ')}`,
+        fixes: appliedRules,
+      });
       // Re-run scan and save report
       console.log(`\n Running post-fix scan…`);
       const report = await runSupervisor({ rootDir, verbose: false, silent: true });
       const reportPath = path.join(VIGIL_DIR, 'last-report.json');
       fs.writeFileSync(reportPath, JSON.stringify(report, null, 2), 'utf8');
       console.log(` Post-fix status: ${report.overallStatus}  (report saved → ${reportPath})`);
+      // Append post-fix scan to history
+      const { fail, warn, pass } = countReport(report);
+      appendHistory({ type: 'scan', overallStatus: report.overallStatus, fail, warn, pass, notes: 'Post-fix scan' });
     }
   }
   console.log(`${LINE}\n`);

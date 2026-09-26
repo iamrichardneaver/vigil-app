@@ -1,0 +1,39 @@
+[
+  {
+    "at": "2026-09-26T08:00:00.000Z",
+    "type": "scan",
+    "overallStatus": "FAIL",
+    "fail": 4,
+    "warn": 12,
+    "pass": 5,
+    "notes": "Initial state — planted violations present. ARCH-001: payment orchestration in controller; ARCH-002: direct axios.get in src/index.js; ARCH-003: weak token.length guard instead of verifyToken(); AICR-001: hardcoded JWT secret 'secret-key' in src/utils.js; AICR-003: axios call mixed with business logic in route handler; AICR-006: console.log('Server running on port 3000') in src/index.js.",
+    "fixes": []
+  },
+  {
+    "at": "2026-09-26T08:51:20.206Z",
+    "fixes": [],
+    "type": "scan",
+    "overallStatus": "FAIL",
+    "fail": 5,
+    "warn": 22,
+    "pass": 6
+  },
+  {
+    "at": "2026-09-26T09:25:24.903Z",
+    "fixes": [],
+    "type": "scan",
+    "overallStatus": "FAIL",
+    "fail": 5,
+    "warn": 22,
+    "pass": 6
+  },
+  {
+    "at": "2026-09-26T09:25:39.126Z",
+    "fixes": [],
+    "type": "scan",
+    "overallStatus": "FAIL",
+    "fail": 5,
+    "warn": 22,
+    "pass": 6
+  }
+]

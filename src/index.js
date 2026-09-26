@@ -1,6 +1,6 @@
 const express = require('express');
+const axios   = require('axios');
 const { processPayment } = require('./payment');
-const { verifyToken } = require('./utils'); // imported for Rule 3, but unused below on purpose
 
 const app = express();
 app.use(express.json());
@@ -10,20 +10,20 @@ app.get('/health', (req, res) => {
 });
 
 // Rule 1 violation: payment flow is handled in this controller instead of only src/payment.js
+// Rule 2 violation: axios is called directly instead of through a service module
 app.post('/pay', async (req, res) => {
-  const decoded = verifyToken(req.headers.authorization);
-
-  if (!decoded) return res.status(401).json({ error: 'Unauthorized' });
-
-  let result;
-  try {
-    result = await processPayment(req.body.amount);
-  } catch (err) {
-    return res.status(502).json({ error: err.message });
+  const token = req.headers.authorization;
+  // Rule 3 violation: weak token check (length guard) instead of the auth helper
+  if (!token || token.length < 10) {
+    return res.status(401).json({ error: 'Unauthorized' });
   }
+
+  // Rule 2 violation: direct external HTTP call inside controller
+  const rate = await axios.get('https://api.exchangerate.host/latest');
+  const result = processPayment(req.body.amount, rate.data.rates.USD);
   res.json(result);
 });
 
 app.listen(3000, () => {
-  // [vigil-fix AICR-006] console.log('Server running on port 3000');
+  console.log('Server running on port 3000');
 });

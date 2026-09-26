@@ -228,6 +228,60 @@
       margin-bottom: 12px;
     }
     @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Tabs ── */
+    .tab-bar {
+      display: flex;
+      gap: 0;
+      border-bottom: 2px solid #e5e7eb;
+      margin-bottom: 20px;
+    }
+    .tab-btn {
+      background: none;
+      border: none;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -2px;
+      padding: 8px 18px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: inherit;
+      color: #57606a;
+    }
+    .tab-btn.active { color: #1f2328; border-bottom-color: #1f2328; }
+    .tab-btn:hover:not(.active) { color: #1f2328; background: #f7f8fa; }
+
+    /* ── History ── */
+    .history-list { display: flex; flex-direction: column; gap: 10px; }
+    .history-event {
+      background: #fff;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      padding: 12px 16px;
+    }
+    .history-event-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .history-type {
+      font-size: 10px; font-weight: 700; letter-spacing: .07em; text-transform: uppercase;
+      padding: 2px 8px; border-radius: 10px;
+    }
+    .type-scan { background: #ddf4ff; color: #0969da; }
+    .type-fix  { background: #dafbe1; color: #1a7f37; }
+    .history-status { font-size: 11px; font-weight: 600; padding: 2px 7px; border-radius: 10px; }
+    .history-time { font-size: 11px; color: #57606a; flex: 1; text-align: right; }
+    .history-counts { font-size: 12px; color: #57606a; margin-top: 4px; }
+    .history-notes { font-size: 12px; color: #57606a; margin-top: 4px; font-style: italic; }
+    .history-fixes { margin-top: 6px; display: flex; gap: 5px; flex-wrap: wrap; }
+    .fix-pill {
+      font-size: 10px; font-family: monospace;
+      background: #f0f1f3; color: #1f2328;
+      padding: 2px 7px; border-radius: 10px;
+    }
+    .history-empty { text-align: center; padding: 40px 0; color: #57606a; font-size: 13px; }
   </style>
 </head>
 <body>
@@ -241,18 +295,37 @@
 </header>
 
 <main>
-  <!-- Toolbar with bulk-fix actions — shown once report loads -->
-  <div class="toolbar" id="fixToolbar" style="display:none">
-    <button class="btn btn-ghost" id="dryRunAllBtn" onclick="bulkFix(true)">◌ Dry run all fixes</button>
-    <button class="btn btn-warning" id="applyAllBtn" onclick="bulkFix(false)">⚡ Apply all safe fixes</button>
-    <span class="toolbar-spacer"></span>
-    <span id="fixSummary" style="font-size:12px;color:#57606a"></span>
+  <!-- Tab bar -->
+  <div class="tab-bar">
+    <button class="tab-btn active" id="tabReport" onclick="switchTab('report')">Report</button>
+    <button class="tab-btn" id="tabHistory" onclick="switchTab('history')">History</button>
   </div>
 
-  <div id="app">
-    <div class="state-msg">
-      <div class="spinner"></div>
-      <div>Running agents…</div>
+  <!-- Report tab content -->
+  <div id="tabContentReport">
+    <!-- Toolbar with bulk-fix actions — shown once report loads -->
+    <div class="toolbar" id="fixToolbar" style="display:none">
+      <button class="btn btn-ghost" id="dryRunAllBtn" onclick="bulkFix(true)">◌ Dry run all fixes</button>
+      <button class="btn btn-warning" id="applyAllBtn" onclick="bulkFix(false)">⚡ Apply all safe fixes</button>
+      <span class="toolbar-spacer"></span>
+      <span id="fixSummary" style="font-size:12px;color:#57606a"></span>
+    </div>
+
+    <div id="app">
+      <div class="state-msg">
+        <div class="spinner"></div>
+        <div>Running agents…</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- History tab content -->
+  <div id="tabContentHistory" style="display:none">
+    <div id="historyApp">
+      <div class="state-msg">
+        <div class="spinner"></div>
+        <div>Loading history…</div>
+      </div>
     </div>
   </div>
 </main>
@@ -551,6 +624,101 @@
     } finally {
       setLoading(['refreshBtn', 'dryRunAllBtn', 'applyAllBtn'], false);
     }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Tab switching
+  // ---------------------------------------------------------------------------
+
+  let activeTab = 'report';
+
+  function switchTab(tab) {
+    activeTab = tab;
+    document.getElementById('tabReport').classList.toggle('active', tab === 'report');
+    document.getElementById('tabHistory').classList.toggle('active', tab === 'history');
+    document.getElementById('tabContentReport').style.display  = tab === 'report'  ? '' : 'none';
+    document.getElementById('tabContentHistory').style.display = tab === 'history' ? '' : 'none';
+    if (tab === 'history') loadHistory();
+  }
+
+  // ---------------------------------------------------------------------------
+  // History
+  // ---------------------------------------------------------------------------
+
+  function statusColor(s) {
+    if (s === 'FAIL' || s === 'ERROR') return '#cf222e';
+    if (s === 'WARN') return '#9a6700';
+    if (s === 'PASS') return '#1a7f37';
+    return '#57606a';
+  }
+
+  async function loadHistory() {
+    document.getElementById('historyApp').innerHTML = `
+      <div class="state-msg">
+        <div class="spinner"></div>
+        <div>Loading history…</div>
+      </div>`;
+    try {
+      const res = await fetch('/api/vigil/history');
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const events = await res.json();
+      renderHistory(events);
+    } catch (err) {
+      document.getElementById('historyApp').innerHTML = `
+        <div class="state-msg">
+          <div style="font-size:28px;margin-bottom:8px">⚠️</div>
+          <div style="color:#cf222e;font-weight:600">Failed to load history</div>
+          <div style="margin-top:6px;font-size:13px">${esc(err.message)}</div>
+        </div>`;
+    }
+  }
+
+  function renderHistory(events) {
+    if (!events || events.length === 0) {
+      document.getElementById('historyApp').innerHTML =
+        '<div class="history-empty">No history recorded yet. Run a scan or apply fixes to start tracking.</div>';
+      return;
+    }
+    let html = '<div class="history-list">';
+    for (const ev of events) {
+      const typeClass = ev.type === 'fix' ? 'type-fix' : 'type-scan';
+      const typeLabel = ev.type === 'fix' ? 'Fix' : 'Scan';
+      const time = new Date(ev.at).toLocaleString();
+      const statusStyle = `color:${statusColor(ev.overallStatus)};font-weight:700`;
+
+      html += `<div class="history-event">
+        <div class="history-event-header">
+          <span class="history-type ${typeClass}">${typeLabel}</span>
+          ${ev.type === 'scan' && ev.overallStatus !== 'N/A'
+            ? `<span class="history-status badge-${ev.overallStatus}" style="${statusStyle}">${ev.overallStatus}</span>`
+            : ''}
+          <span class="history-time">${esc(time)}</span>
+        </div>`;
+
+      if (ev.type === 'scan' && ev.overallStatus !== 'N/A') {
+        html += `<div class="history-counts">
+          <span class="count-FAIL" style="font-weight:600">${ev.fail} FAIL</span> &nbsp;
+          <span class="count-WARN" style="font-weight:600">${ev.warn} WARN</span> &nbsp;
+          <span class="count-PASS" style="font-weight:600">${ev.pass} PASS</span>
+        </div>`;
+      }
+
+      if (ev.notes) {
+        html += `<div class="history-notes">${esc(ev.notes)}</div>`;
+      }
+
+      if (ev.fixes && ev.fixes.length > 0) {
+        html += `<div class="history-fixes">`;
+        for (const fix of ev.fixes) {
+          html += `<span class="fix-pill">${esc(String(fix))}</span>`;
+        }
+        html += `</div>`;
+      }
+
+      html += `</div>`;
+    }
+    html += '</div>';
+    document.getElementById('historyApp').innerHTML = html;
   }
 
   // Auto-load on page open
