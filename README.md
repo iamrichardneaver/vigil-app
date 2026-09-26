@@ -1,156 +1,64 @@
-# Vigil
+# Vigil – Living Architectural Immune System
 
-Code-health system for the `vigil-app` project. Runs four static-analysis agents
-against the source tree and reports architectural violations, dependency drift,
-AI-code risks, and fix proposals.
+A continuous multi-agent system built with **IBM Bob 2.0** that monitors a repository for three kinds of decay:
 
----
+- dependency drift
+- AI-generated code risk
+- architectural invariant violations
 
-## Quick start
+Vigil scans the project, explains the blast radius, proposes the smallest safe fix, and can apply known patches from the CLI or a simple dashboard.
 
-```bash
-npm start          # API server + admin UI  →  http://localhost:3000
-npm run scan       # one-shot CLI scan (verbose)
-npm run fix:dry    # preview all auto-fixes (no files written)
-npm run fix        # apply all safe auto-fixes
-```
+This project was built for the IBM Bob 2.0 Hackathon theme: **Build with purpose using IBM Bob 2.0**, focused on the **application maintenance** workflow.
 
----
+## Problem
 
-## CLI — `vigil/cli.js`
+Developer teams still lose time on maintenance work that existing tools handle poorly:
 
-The CLI is also registered as the package `bin` entry, so after `npm link` (or
-`npm install -g`) the `vigil` binary is available globally.
+- Dependency updates and CVEs arrive without codebase-specific impact analysis
+- AI-assisted coding introduces hidden coupling, weak auth checks, and hardcoded secrets
+- Architectural rules written in docs are silently broken in source files
 
-```
-node vigil/cli.js <command> [flags]
-```
+The result is slow review, rework, and preventable production risk.
 
-### Commands
+## Solution
 
-| Command | Flags | Description |
-|---|---|---|
-| `scan` | `--verbose` `--json` `--root <path>` | Run all agents and print the report. Exits `1` on FAIL/ERROR. |
-| `report` | `--out <file>` | Run agents silently, save JSON to file (default: `vigil/last-report.json`). |
-| `fix` | `--dry-run` `--rule <id>` `--root <path>` | Apply (or preview) safe auto-fixes. |
-| `status` | — | Print a summary of the last cached report without re-running agents. |
-| `serve` | `--port <n>` `--root <path>` | Start the API + admin UI server. |
+Vigil keeps a living model of the repository and runs four specialized agents under a Supervisor:
 
-#### Examples
+1. **Drift Scanner** — declared vs resolved dependencies, unpinned ranges, watch-list packages
+2. **AI-Code Risk Agent** — hardcoded secrets, inline auth, mixed I/O, unguarded async, leftover console output
+3. **Invariant Guardian** — enforces rules from `ARCHITECTURE.md` and `docs/invariants.md`
+4. **Healing & Documentation Agent** — turns findings into concrete fix proposals and checks whether architecture docs still cover active rules
 
-```bash
-# Scan and exit with code 1 if issues found
-node vigil/cli.js scan --verbose
+A deterministic fix engine can apply known safe patches. The same report is available from:
 
-# Save JSON report to a custom path
-node vigil/cli.js report --out /tmp/vigil-report.json
+- CLI
+- REST API
+- Admin UI
 
-# Preview what would change (no writes)
-node vigil/cli.js fix --dry-run
+## How IBM Bob 2.0 was used
 
-# Apply only a specific rule's fix
-node vigil/cli.js fix --rule AICR-001
+IBM Bob IDE was the core development partner for this project.
 
-# Apply all fixes
-node vigil/cli.js fix
+- Full repository context was used to read `package.json`, source files, and architecture documents
+- Agent mode, parallel tasks, and subagents were used to design and implement the Supervisor plus the four Vigil agents
+- Document understanding was used to extract architectural invariants from `ARCHITECTURE.md` and `docs/invariants.md`
+- Bob task session summaries are included in `bob_sessions/` as required submission evidence
 
-# Show status of last scan without re-running
-node vigil/cli.js status
+Bob was used to build and refine the system, not only to autocomplete snippets.
 
-# Start the server on a custom port
-node vigil/cli.js serve --port 8080
-```
+## Repository layout
 
-The original entry point continues to work unchanged:
-
-```bash
-node vigil/agents/index.js --verbose
-```
-
----
-
-## REST API — `vigil/server.js`
-
-Start: `npm start` or `node vigil/server.js [--port <n>] [--root <path>]`
-
-| Method | Path | Description |
-|---|---|---|
-| `GET` | `/api/vigil/health` | Liveness check — returns `{ status: "ok", timestamp }` |
-| `GET` | `/api/vigil/report` | Runs all agents; returns full `VigilReport` JSON |
-| `POST` | `/api/vigil/fix` | Runs fix engine. Body: `{ ruleId?: string, dryRun?: boolean }` |
-| `GET` | `/` | Serves the admin UI |
-
-### POST /api/vigil/fix — body & response
-
-```jsonc
-// Request body (all fields optional)
-{ "ruleId": "AICR-001", "dryRun": true }
-
-// Response
-{
-  "dryRun": true,
-  "results": [
-    { "ruleIds": "AICR-001", "file": "src/utils.js", "describe": "...",
-      "applicable": true, "files": ["src/utils.js"] }
-  ],
-  "report": null   // populated after a real (non-dry) apply
-}
-```
-
----
-
-## Auto-fix engine — `vigil/fixes/apply.js`
-
-Deterministic patches for six rules. Each patch:
-
-1. **Tests** whether its target snippet is still present before touching anything.
-2. If present, **applies** the smallest safe change.
-3. Patches run in dependency order so later patches see the state left by earlier ones.
-4. A `vigil/last-fixes.json` log is written after every real apply.
-
-| Rule(s) | What changes |
-|---|---|
-| `AICR-001` | Replaces `'secret-key'` literal in `src/utils.js` with `process.env.JWT_SECRET` |
-| `ARCH-003`, `AICR-002` | Replaces `token.length < 10` guard in `src/index.js` with `verifyToken()` |
-| `ARCH-002`, `AICR-003` | Creates `src/services/exchangeRateService.js`; removes `axios.get` from controller |
-| `ARCH-001` | Moves rate-fetch into `processPayment` in `src/payment.js`; simplifies controller |
-| `AICR-004` | Wraps remaining `await processPayment` in `try/catch` |
-| `AICR-006` | Comments out `console.log('Server running …')` |
-
-**Dry-run** prints the plan and writes nothing. **Apply** writes files and re-runs
-the scan to show the updated status.
-
----
-
-## Agents (unchanged)
-
-| Agent | ID | What it checks |
-|---|---|---|
-| Invariant Guardian | `invariant-guardian` | Architectural rules (ARCH-001–004) |
-| Drift Scanner | `drift-scanner` | Dependency health (DRIFT-001–005) |
-| AI-Code Risk | `ai-code-risk` | AI-generated code patterns (AICR-001–006) |
-| Healing & Documentation | `healing-doc` | Fix proposals + doc gaps |
-
----
-
-## File layout
-
-```
-vigil/
-  cli.js                  ← installable CLI (this file)
-  server.js               ← Express API + static file server
-  fixes/
-    apply.js              ← auto-fix engine
-  agents/
-    supervisor.js         ← orchestrator
-    invariant-guardian.js
-    drift-scanner.js
-    ai-code-risk.js
-    healing-doc.js
-    types.js
-    index.js              ← original CLI entry (unchanged)
-  public/
-    index.html            ← admin UI
-  last-report.json        ← written by `vigil report` / `vigil fix` / API
-  last-fixes.json         ← written by `vigil fix` (real apply)
-```
+```text
+vigil-sample-app/
+├── ARCHITECTURE.md
+├── docs/invariants.md
+├── src/                         # sample application under watch
+├── vigil/
+│   ├── living-model.md
+│   ├── agents/                  # Supervisor + 4 agents
+│   ├── fixes/apply.js           # deterministic patch engine
+│   ├── cli.js                   # vigil scan | report | fix | status | serve
+│   ├── server.js                # API + dashboard
+│   └── public/index.html
+├── bob_sessions/                # required Bob task summaries
+└── README.md
