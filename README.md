@@ -48,7 +48,9 @@ Bob was used to build and refine the system, not only to autocomplete snippets.
 
 ## Demo
 
-Current findings dashboard:
+Live dashboard: https://vigil-app--iamrichardneaver.replit.app
+
+Dashboard screenshot:
 
 ![Vigil admin dashboard](demo/vigil-dashboard.png)
 
@@ -56,11 +58,19 @@ History of scans and applied fixes:
 
 ![Vigil history](demo/vigil-history.png)
 
-Start the dashboard with:
+Start the local dashboard with:
 
     node vigil/cli.js serve
 
 Then open http://localhost:3000/
+
+## Live demo
+
+Public dashboard: https://vigil-app--iamrichardneave.replit.app
+
+Local dashboard:
+
+    node vigil/cli.js serve
 
 ## Repository layout
 
