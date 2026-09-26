@@ -64,13 +64,6 @@ Start the local dashboard with:
 
 Then open http://localhost:3000/
 
-## Live demo
-
-Public dashboard: https://vigil-app--iamrichardneave.replit.app
-
-Local dashboard:
-
-    node vigil/cli.js serve
 
 ## Repository layout
 
