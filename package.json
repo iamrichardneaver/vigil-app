@@ -1,0 +1,19 @@
+{
+  "name": "vigil-app",
+  "version": "1.0.0",
+  "description": "Sample Node.js app for IBM Bob 2.0 Vigil project",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "test": "echo \"No tests yet\""
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "lodash": "^4.17.21",
+    "axios": "^1.6.0",
+    "jsonwebtoken": "^9.0.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  }
+}
