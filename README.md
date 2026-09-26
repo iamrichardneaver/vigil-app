@@ -48,15 +48,17 @@ Bob was used to build and refine the system, not only to autocomplete snippets.
 
 ## Demo
 
-Dashboard screenshot:
+Current findings dashboard:
 
 ![Vigil admin dashboard](demo/vigil-dashboard.png)
 
+History of scans and applied fixes:
+
+![Vigil history](demo/vigil-history.png)
+
 Start the dashboard with:
 
-```bash
-node vigil/cli.js serve
-```
+    node vigil/cli.js serve
 
 Then open http://localhost:3000/
 
@@ -131,6 +133,7 @@ Start the dashboard and API:
 ```bash
 node vigil/cli.js serve
 ```
+The dashboard includes the current report and a History tab of past scans and applied fixes.
 
 Then open:
 
@@ -170,7 +173,7 @@ curl -X POST http://localhost:3000/api/vigil/fix -H "Content-Type: application/j
 
 ## What the sample app contains
 
-The sample app is a small Express service used as the codebase under watch. It originally included planted maintenance issues:
+The sample app is a small Express service used as the codebase under watch. It ships with planted maintenance issues so judges can see Vigil detect and fix them:
 
 - payment orchestration mixed into the controller
 - a direct axios call from a route handler
@@ -178,16 +181,22 @@ The sample app is a small Express service used as the codebase under watch. It o
 - a hardcoded JWT secret
 - unpinned dependency ranges
 
-Vigil detected those issues, proposed fixes, and applied the safe patches. A later scan reports **0 FAIL**, with remaining **WARN** findings limited to dependency policy review.
+Run `node vigil/cli.js scan --verbose` to see the FAIL and WARN findings.  
+Run `node vigil/cli.js fix --dry-run` to preview the patches.  
+Run `node vigil/cli.js fix` to apply the safe fixes, then scan again to see the FAIL count drop.
+
+The dashboard History tab records those scans and applied fixes.
 
 ## Measurable impact
 
 On this sample repository:
 
-- Time to identify architectural and AI-code issues dropped from a manual file-by-file review to a single command
-- Original high-severity issues were reduced to **0 FAIL**
-- Remaining findings are explicit dependency warnings with recommended pins
-- The same report is available in CLI, JSON, and UI
+- A full maintenance review is reduced to one scan command
+- Planted architectural and AI-code failures are detected with file and line evidence
+- Safe fixes can be previewed or applied from the CLI or dashboard
+- A second scan shows the FAIL count drop after fixes are applied
+- Remaining items are explicit dependency warnings
+- Scan and fix history is kept so the before/after trail is visible
 - The scan returns exit code `1` when FAIL or ERROR exists, so it can be used in CI
 
 ## Hackathon evidence
