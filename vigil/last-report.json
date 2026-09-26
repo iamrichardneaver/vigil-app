@@ -1,0 +1,278 @@
+{
+  "version": "1.0",
+  "project": "vigil-app",
+  "ranAt": "2026-09-26T07:58:36.740Z",
+  "overallStatus": "WARN",
+  "agents": [
+    {
+      "agentId": "invariant-guardian",
+      "agentName": "Invariant Guardian",
+      "ranAt": "2026-09-26T07:58:36.727Z",
+      "overallStatus": "PASS",
+      "findings": [
+        {
+          "ruleId": "ARCH-001",
+          "status": "PASS",
+          "title": "Payment logic is correctly isolated in src/payment.js",
+          "detail": "Rule satisfied.",
+          "file": null,
+          "line": null,
+          "snippet": null
+        },
+        {
+          "ruleId": "ARCH-002",
+          "status": "PASS",
+          "title": "No direct axios calls found in controller",
+          "detail": "Rule satisfied.",
+          "file": null,
+          "line": null,
+          "snippet": null
+        },
+        {
+          "ruleId": "ARCH-003",
+          "status": "PASS",
+          "title": "All JWT verification goes through utils.verifyToken()",
+          "detail": "Rule satisfied.",
+          "file": null,
+          "line": null,
+          "snippet": null
+        },
+        {
+          "ruleId": "ARCH-004",
+          "status": "PASS",
+          "title": "No disallowed lodash array-operation usage found",
+          "detail": "Rule satisfied.",
+          "file": null,
+          "line": null,
+          "snippet": null
+        }
+      ],
+      "errors": []
+    },
+    {
+      "agentId": "drift-scanner",
+      "agentName": "Drift Scanner",
+      "ranAt": "2026-09-26T07:58:36.736Z",
+      "overallStatus": "WARN",
+      "findings": [
+        {
+          "ruleId": "DRIFT-001",
+          "status": "WARN",
+          "title": "Watch-list package: lodash",
+          "detail": "Declared: \"^4.17.21\"  Resolved: 4.18.1\nLarge utility library with a history of prototype-pollution CVEs (CVE-2019-10744, CVE-2020-8203). Only deep-merge / deep-clone use is permitted per ARCH-004. Prefer native alternatives for new code.",
+          "file": "package.json",
+          "line": null,
+          "snippet": "\"lodash\": \"^4.17.21\""
+        },
+        {
+          "ruleId": "DRIFT-001",
+          "status": "WARN",
+          "title": "Watch-list package: axios",
+          "detail": "Declared: \"^1.6.0\"  Resolved: 1.20.0\nHTTP client with a history of SSRF and redirect-related CVEs (follow-redirects transitive dep). Ensure no direct controller usage per ARCH-002 and that the installed version is pinned to a patched release.",
+          "file": "package.json",
+          "line": null,
+          "snippet": "\"axios\": \"^1.6.0\""
+        },
+        {
+          "ruleId": "DRIFT-001",
+          "status": "WARN",
+          "title": "Watch-list package: jsonwebtoken",
+          "detail": "Declared: \"^9.0.0\"  Resolved: 9.0.3\nJWT library. CVE-2022-23529 / CVE-2022-23540 / CVE-2022-23541 fixed in 9.0.0. Confirm resolved version is ≥ 9.0.0.",
+          "file": "package.json",
+          "line": null,
+          "snippet": "\"jsonwebtoken\": \"^9.0.0\""
+        },
+        {
+          "ruleId": "DRIFT-002",
+          "status": "WARN",
+          "title": "Unpinned range for \"express\"",
+          "detail": "Declared as \"^4.18.2\". Using ^ or ~ allows npm to resolve a newer patch/minor version than was tested. Pin to an exact version or use a lock file and treat it as the source of truth.",
+          "file": "package.json",
+          "line": null,
+          "snippet": "\"express\": \"^4.18.2\""
+        },
+        {
+          "ruleId": "DRIFT-002",
+          "status": "WARN",
+          "title": "Unpinned range for \"lodash\"",
+          "detail": "Declared as \"^4.17.21\". Using ^ or ~ allows npm to resolve a newer patch/minor version than was tested. Pin to an exact version or use a lock file and treat it as the source of truth.",
+          "file": "package.json",
+          "line": null,
+          "snippet": "\"lodash\": \"^4.17.21\""
+        },
+        {
+          "ruleId": "DRIFT-002",
+          "status": "WARN",
+          "title": "Unpinned range for \"axios\"",
+          "detail": "Declared as \"^1.6.0\". Using ^ or ~ allows npm to resolve a newer patch/minor version than was tested. Pin to an exact version or use a lock file and treat it as the source of truth.",
+          "file": "package.json",
+          "line": null,
+          "snippet": "\"axios\": \"^1.6.0\""
+        },
+        {
+          "ruleId": "DRIFT-002",
+          "status": "WARN",
+          "title": "Unpinned range for \"jsonwebtoken\"",
+          "detail": "Declared as \"^9.0.0\". Using ^ or ~ allows npm to resolve a newer patch/minor version than was tested. Pin to an exact version or use a lock file and treat it as the source of truth.",
+          "file": "package.json",
+          "line": null,
+          "snippet": "\"jsonwebtoken\": \"^9.0.0\""
+        },
+        {
+          "ruleId": "DRIFT-003",
+          "status": "WARN",
+          "title": "Version drift for \"express\"",
+          "detail": "Declared floor: \"4.18.2\"  Resolved: \"4.22.3\". The installed version is more than one minor version ahead of the declared lower bound. Review the changelog and tighten the range.",
+          "file": "package.json",
+          "line": null,
+          "snippet": "\"express\": \"^4.18.2\"  →  installed: 4.22.3"
+        },
+        {
+          "ruleId": "DRIFT-003",
+          "status": "WARN",
+          "title": "Version drift for \"axios\"",
+          "detail": "Declared floor: \"1.6.0\"  Resolved: \"1.20.0\". The installed version is more than one minor version ahead of the declared lower bound. Review the changelog and tighten the range.",
+          "file": "package.json",
+          "line": null,
+          "snippet": "\"axios\": \"^1.6.0\"  →  installed: 1.20.0"
+        },
+        {
+          "ruleId": "DRIFT-004",
+          "status": "PASS",
+          "title": "package-lock.json is present",
+          "detail": "Rule satisfied.",
+          "file": null,
+          "line": null,
+          "snippet": null
+        },
+        {
+          "ruleId": "DRIFT-005",
+          "status": "PASS",
+          "title": "No devDependencies imported in production source files",
+          "detail": "Rule satisfied.",
+          "file": null,
+          "line": null,
+          "snippet": null
+        }
+      ],
+      "errors": []
+    },
+    {
+      "agentId": "ai-code-risk",
+      "agentName": "AI-Code Risk",
+      "ranAt": "2026-09-26T07:58:36.740Z",
+      "overallStatus": "PASS",
+      "findings": [
+        {
+          "ruleId": "AICR-001",
+          "status": "PASS",
+          "title": "No hardcoded secrets detected",
+          "detail": "Rule satisfied.",
+          "file": null,
+          "line": null,
+          "snippet": null
+        },
+        {
+          "ruleId": "AICR-002",
+          "status": "PASS",
+          "title": "No inline authentication patterns detected",
+          "detail": "Rule satisfied.",
+          "file": null,
+          "line": null,
+          "snippet": null
+        },
+        {
+          "ruleId": "AICR-003",
+          "status": "PASS",
+          "title": "No mixed HTTP-call-and-processing patterns found",
+          "detail": "Rule satisfied.",
+          "file": null,
+          "line": null,
+          "snippet": null
+        },
+        {
+          "ruleId": "AICR-004",
+          "status": "PASS",
+          "title": "No unguarded async calls detected",
+          "detail": "Rule satisfied.",
+          "file": null,
+          "line": null,
+          "snippet": null
+        },
+        {
+          "ruleId": "AICR-005",
+          "status": "PASS",
+          "title": "No TODO/FIXME/HACK comments found",
+          "detail": "Rule satisfied.",
+          "file": null,
+          "line": null,
+          "snippet": null
+        },
+        {
+          "ruleId": "AICR-006",
+          "status": "PASS",
+          "title": "No console.log calls found in source files",
+          "detail": "Rule satisfied.",
+          "file": null,
+          "line": null,
+          "snippet": null
+        }
+      ],
+      "errors": []
+    },
+    {
+      "agentId": "healing-doc",
+      "agentName": "Healing & Documentation",
+      "ranAt": "2026-09-26T07:58:36.740Z",
+      "overallStatus": "WARN",
+      "findings": [
+        {
+          "ruleId": "HEAL-DRIFT-001",
+          "status": "WARN",
+          "title": "Fix proposal for DRIFT-001: Watch-list dependency",
+          "detail": "Review the linked CVEs for each flagged package. Pin the dependency to the exact patched version in package.json and regenerate package-lock.json. Add a comment explaining the chosen version and when it should be reviewed next.",
+          "file": "package.json",
+          "line": null,
+          "snippet": null
+        },
+        {
+          "ruleId": "HEAL-DRIFT-002",
+          "status": "WARN",
+          "title": "Fix proposal for DRIFT-002: Unpinned version range",
+          "detail": "Replace ^ and ~ prefixes with the exact resolved version from package-lock.json. Treat the lock file as the authoritative version record and keep it committed.",
+          "file": "package.json",
+          "line": null,
+          "snippet": "Suggested change:\n// Before:  \"axios\": \"^1.6.0\"\n// After:   \"axios\": \"1.20.0\"   ← exact resolved version from lock file"
+        },
+        {
+          "ruleId": "HEAL-DRIFT-003",
+          "status": "WARN",
+          "title": "Fix proposal for DRIFT-003: Version drift",
+          "detail": "Tighten the declared range to reflect the tested version. Review the package changelog for the skipped minor versions to confirm no breaking or security changes were introduced.",
+          "file": "package.json",
+          "line": null,
+          "snippet": null
+        },
+        {
+          "ruleId": "HEAL-DOC-001",
+          "status": "PASS",
+          "title": "ARCHITECTURE.md covers all active violation areas",
+          "detail": "Rule satisfied.",
+          "file": null,
+          "line": null,
+          "snippet": null
+        },
+        {
+          "ruleId": "HEAL-SUMMARY",
+          "status": "WARN",
+          "title": "Health summary: 0 FAIL  9 WARN  12 PASS across all agents",
+          "detail": "Total findings from prior agents — FAIL: 0, WARN: 9, PASS: 12. Review WARN findings and decide which to address.",
+          "file": null,
+          "line": null,
+          "snippet": null
+        }
+      ],
+      "errors": []
+    }
+  ]
+}

@@ -1,0 +1,49 @@
+{
+  "appliedAt": "2026-09-26T07:43:09.048Z",
+  "applied": [
+    {
+      "ruleIds": [
+        "AICR-001"
+      ],
+      "file": "src/utils.js",
+      "describe": "Replace hardcoded JWT secret 'secret-key' with process.env.JWT_SECRET"
+    },
+    {
+      "ruleIds": [
+        "ARCH-003",
+        "AICR-002"
+      ],
+      "file": "src/index.js",
+      "describe": "Replace inline token.length guard with verifyToken() call in src/index.js"
+    },
+    {
+      "ruleIds": [
+        "ARCH-002",
+        "AICR-003"
+      ],
+      "file": "src/index.js",
+      "describe": "Extract axios.get() into src/services/exchangeRateService.js; update src/index.js"
+    },
+    {
+      "ruleIds": [
+        "ARCH-001"
+      ],
+      "file": "src/index.js",
+      "describe": "Move rate-fetch into processPayment (src/payment.js); simplify controller call"
+    },
+    {
+      "ruleIds": [
+        "AICR-004"
+      ],
+      "file": "src/index.js",
+      "describe": "Wrap async processPayment call in try/catch in src/index.js"
+    },
+    {
+      "ruleIds": [
+        "AICR-006"
+      ],
+      "file": "src/index.js",
+      "describe": "Comment out console.log('Server running on port 3000') in src/index.js"
+    }
+  ]
+}

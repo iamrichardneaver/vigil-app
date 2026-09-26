@@ -1,0 +1,11 @@
+---
+description: Keep all git commits and PRs attributed only to the repo owner
+alwaysApply: true
+---
+
+# Git attribution
+
+- Author and committer must be `iamrichardneaver <132651723+iamrichardneaver@users.noreply.github.com>`.
+- Do not add `Co-authored-by: Cursor`, `Made-with: Cursor`, or any Cursor attribution trailer.
+- Do not pass `git commit --trailer` for Cursor.
+- If a commit message contains a Cursor trailer, remove it before publishing.

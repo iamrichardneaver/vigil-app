@@ -4,7 +4,7 @@ const _ = require('lodash');
 // Rule 3: official JWT helper — all verification must use this function
 function verifyToken(token) {
   try {
-    return jwt.verify(token, 'secret-key');
+    return jwt.verify(token, process.env.JWT_SECRET || 'secret-key');
   } catch (err) {
     return null;
   }

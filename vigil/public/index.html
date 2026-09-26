@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Vigil — Admin Dashboard</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, "Segoe UI", system-ui, sans-serif;
+      font-size: 14px;
+      line-height: 1.6;
+      background: #f7f8fa;
+      color: #1f2328;
+    }
+
+    /* ── Header ── */
+    header {
+      background: #1f2328;
+      color: #fff;
+      padding: 0 24px;
+      height: 52px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    header h1 { font-size: 16px; font-weight: 600; letter-spacing: .04em; }
+    header .subtitle { font-size: 12px; color: #8b949e; flex: 1; }
+    header .header-actions { display: flex; gap: 8px; }
+
+    /* ── Layout ── */
+    main {
+      max-width: 960px;
+      margin: 28px auto;
+      padding: 0 20px;
+    }
+
+    /* ── Overall banner ── */
+    .overall-banner {
+      border-radius: 8px;
+      padding: 18px 22px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 20px;
+      border: 1px solid transparent;
+    }
+    .overall-banner .status-icon  { font-size: 30px; line-height: 1; }
+    .overall-banner .status-label { font-size: 20px; font-weight: 700; }
+    .overall-banner .status-meta  { font-size: 12px; color: #57606a; margin-top: 2px; }
+
+    .banner-PASS  { background: #dafbe1; border-color: #56d364; }
+    .banner-WARN  { background: #fff8c5; border-color: #e3b341; }
+    .banner-FAIL  { background: #ffdcd7; border-color: #f85149; }
+    .banner-ERROR { background: #ffdcd7; border-color: #f85149; }
+
+    /* ── Summary counters ── */
+    .counters { display: flex; gap: 10px; margin-bottom: 24px; flex-wrap: wrap; }
+    .counter {
+      flex: 1; min-width: 100px;
+      background: #fff;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      padding: 14px;
+      text-align: center;
+    }
+    .counter .count       { font-size: 26px; font-weight: 700; line-height: 1; }
+    .counter .count-label { font-size: 11px; color: #57606a; margin-top: 4px; text-transform: uppercase; letter-spacing: .06em; }
+    .count-FAIL  { color: #cf222e; }
+    .count-WARN  { color: #9a6700; }
+    .count-PASS  { color: #1a7f37; }
+    .count-ERROR { color: #cf222e; }
+
+    /* ── Toolbar ── */
+    .toolbar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+    .toolbar-spacer { flex: 1; }
+
+    /* ── Buttons ── */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      border: none;
+      border-radius: 6px;
+      padding: 7px 14px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: inherit;
+      white-space: nowrap;
+      transition: opacity .15s;
+    }
+    .btn:disabled { opacity: .45; cursor: not-allowed; }
+    .btn-dark     { background: #1f2328; color: #fff; }
+    .btn-dark:hover:not(:disabled)    { background: #32383f; }
+    .btn-warning  { background: #d29922; color: #fff; }
+    .btn-warning:hover:not(:disabled) { background: #b88117; }
+    .btn-danger   { background: #cf222e; color: #fff; }
+    .btn-danger:hover:not(:disabled)  { background: #a40e26; }
+    .btn-success  { background: #1a7f37; color: #fff; }
+    .btn-success:hover:not(:disabled) { background: #116329; }
+    .btn-ghost    { background: transparent; color: #1f2328; border: 1px solid #e5e7eb; }
+    .btn-ghost:hover:not(:disabled)   { background: #f7f8fa; }
+    .btn-sm { padding: 4px 10px; font-size: 11px; }
+
+    /* ── Toast notifications ── */
+    #toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      max-width: 340px;
+      background: #1f2328;
+      color: #fff;
+      border-radius: 8px;
+      padding: 12px 16px;
+      font-size: 13px;
+      line-height: 1.5;
+      display: none;
+      z-index: 100;
+      box-shadow: 0 4px 16px rgba(0,0,0,.18);
+    }
+    #toast.show { display: block; }
+    #toast.toast-ok   { background: #1a7f37; }
+    #toast.toast-warn { background: #9a6700; }
+    #toast.toast-err  { background: #cf222e; }
+
+    /* ── Agent sections ── */
+    .agent-section {
+      background: #fff;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      margin-bottom: 14px;
+      overflow: hidden;
+    }
+    .agent-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 13px 16px;
+      cursor: pointer;
+      user-select: none;
+      background: #fff;
+      border-bottom: 1px solid #e5e7eb;
+    }
+    .agent-header:hover { background: #f7f8fa; }
+    .agent-status-dot {
+      width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0;
+    }
+    .dot-PASS  { background: #1a7f37; }
+    .dot-WARN  { background: #9a6700; }
+    .dot-FAIL  { background: #cf222e; }
+    .dot-ERROR { background: #cf222e; }
+
+    .agent-name  { font-weight: 600; font-size: 14px; flex: 1; }
+    .agent-badge {
+      font-size: 11px; font-weight: 600;
+      padding: 2px 8px; border-radius: 12px; letter-spacing: .04em;
+    }
+    .badge-PASS  { background: #dafbe1; color: #1a7f37; }
+    .badge-WARN  { background: #fff8c5; color: #9a6700; }
+    .badge-FAIL  { background: #ffdcd7; color: #cf222e; }
+    .badge-ERROR { background: #ffdcd7; color: #cf222e; }
+
+    .chevron { font-size: 10px; color: #57606a; transition: transform .15s; }
+    .agent-section.open .chevron { transform: rotate(90deg); }
+
+    /* ── Findings ── */
+    .findings-body { display: none; }
+    .agent-section.open .findings-body { display: block; }
+
+    .finding-row {
+      display: grid;
+      grid-template-columns: 100px 1fr auto;
+      gap: 10px;
+      align-items: start;
+      padding: 10px 16px;
+      border-bottom: 1px solid #f0f1f3;
+      font-size: 13px;
+    }
+    .finding-row:last-child { border-bottom: none; }
+    .finding-row:hover { background: #fafafa; }
+
+    .rule-id { font-family: monospace; font-size: 11px; color: #57606a; padding-top: 1px; }
+
+    .finding-status {
+      font-size: 11px; font-weight: 600;
+      padding: 2px 7px; border-radius: 10px; white-space: nowrap; align-self: start;
+    }
+
+    .finding-title    { font-weight: 500; }
+    .finding-location { font-size: 11px; color: #57606a; font-family: monospace; margin-top: 2px; }
+    .finding-detail   {
+      grid-column: 1 / -1;
+      font-size: 12px; color: #57606a; line-height: 1.5;
+      padding: 4px 0 2px;
+    }
+
+    /* fix-action column — the auto button */
+    .finding-actions { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
+
+    /* ── Fix result inline tag ── */
+    .fix-tag {
+      font-size: 10px; font-weight: 600;
+      padding: 2px 7px; border-radius: 10px;
+      background: #dafbe1; color: #1a7f37;
+      white-space: nowrap;
+    }
+    .fix-tag.pending { background: #fff8c5; color: #9a6700; }
+
+    /* ── No findings ── */
+    .no-findings { padding: 12px 16px; font-size: 13px; color: #57606a; }
+
+    /* ── Loading / error ── */
+    .state-msg { text-align: center; padding: 60px 0; color: #57606a; }
+    .state-msg .spinner {
+      display: inline-block;
+      width: 28px; height: 28px;
+      border: 3px solid #e5e7eb; border-top-color: #3b82d4;
+      border-radius: 50%;
+      animation: spin .7s linear infinite;
+      margin-bottom: 12px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>Vigil</h1>
+  <span class="subtitle">Code-health dashboard</span>
+  <div class="header-actions">
+    <button class="btn btn-dark" id="refreshBtn" onclick="loadReport()">↻ Refresh</button>
+  </div>
+</header>
+
+<main>
+  <!-- Toolbar with bulk-fix actions — shown once report loads -->
+  <div class="toolbar" id="fixToolbar" style="display:none">
+    <button class="btn btn-ghost" id="dryRunAllBtn" onclick="bulkFix(true)">◌ Dry run all fixes</button>
+    <button class="btn btn-warning" id="applyAllBtn" onclick="bulkFix(false)">⚡ Apply all safe fixes</button>
+    <span class="toolbar-spacer"></span>
+    <span id="fixSummary" style="font-size:12px;color:#57606a"></span>
+  </div>
+
+  <div id="app">
+    <div class="state-msg">
+      <div class="spinner"></div>
+      <div>Running agents…</div>
+    </div>
+  </div>
+</main>
+
+<!-- Toast -->
+<div id="toast"></div>
+
+<script>
+  // ── Set of ruleIds that have a patch available (populated from /api/vigil/fix dryRun) ──
+  const FIXABLE_RULES = new Set();
+
+  // ── Cached last report ──
+  let lastReport = null;
+
+  // ── ruleId → fix result (after bulk or single apply) ──
+  const fixResults = {};
+
+  // ---------------------------------------------------------------------------
+  // Utilities
+  // ---------------------------------------------------------------------------
+
+  function esc(str) {
+    return String(str ?? '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
+  function toast(msg, type = 'ok') {
+    const el = document.getElementById('toast');
+    el.className = `show toast-${type}`;
+    el.textContent = msg;
+    clearTimeout(el._t);
+    el._t = setTimeout(() => { el.className = ''; }, 4500);
+  }
+
+  function setLoading(ids, loading) {
+    for (const id of ids) {
+      const el = document.getElementById(id);
+      if (el) el.disabled = loading;
+    }
+  }
+
+  function countFindings(agents) {
+    const counts = { FAIL: 0, WARN: 0, PASS: 0, ERROR: 0 };
+    for (const agent of agents) {
+      for (const f of agent.findings) counts[f.status] = (counts[f.status] || 0) + 1;
+      counts.ERROR += agent.errors.length;
+    }
+    return counts;
+  }
+
+  // ---------------------------------------------------------------------------
+  // Discover which ruleIds have patches (one-time dry-run call on load)
+  // ---------------------------------------------------------------------------
+
+  async function discoverFixable() {
+    try {
+      const res = await fetch('/api/vigil/fix', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ dryRun: true }),
+      });
+      if (!res.ok) return;
+      const data = await res.json();
+      FIXABLE_RULES.clear();
+      for (const r of data.results) {
+        if (r.applicable) {
+          for (const id of r.ruleIds.split(', ')) FIXABLE_RULES.add(id.trim());
+        }
+      }
+    } catch { /* silently ignore — fix buttons just won't show */ }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Render
+  // ---------------------------------------------------------------------------
+
+  function renderReport(report) {
+    lastReport = report;
+    const counts = countFindings(report.agents);
+    const s = report.overallStatus;
+
+    // Overall banner
+    let html = `
+      <div class="overall-banner banner-${s}">
+        <div class="status-icon">${s === 'PASS' ? '✅' : s === 'WARN' ? '⚠️' : '❌'}</div>
+        <div>
+          <div class="status-label">${s}</div>
+          <div class="status-meta">${esc(report.project)} &nbsp;·&nbsp; ${new Date(report.ranAt).toLocaleString()}</div>
+        </div>
+      </div>`;
+
+    // Counters
+    html += `
+      <div class="counters">
+        <div class="counter"><div class="count count-FAIL">${counts.FAIL}</div><div class="count-label">Failures</div></div>
+        <div class="counter"><div class="count count-WARN">${counts.WARN}</div><div class="count-label">Warnings</div></div>
+        <div class="counter"><div class="count count-PASS">${counts.PASS}</div><div class="count-label">Passing</div></div>
+        <div class="counter"><div class="count count-ERROR">${counts.ERROR}</div><div class="count-label">Errors</div></div>
+      </div>`;
+
+    // Agent sections
+    for (const agent of report.agents) {
+      const as = agent.overallStatus;
+      const open = as !== 'PASS';
+
+      html += `
+        <div class="agent-section ${open ? 'open' : ''}">
+          <div class="agent-header" onclick="toggleSection(this.parentElement)">
+            <div class="agent-status-dot dot-${as}"></div>
+            <div class="agent-name">${esc(agent.agentName)}</div>
+            <span class="agent-badge badge-${as}">${as}</span>
+            <span class="chevron">▶</span>
+          </div>
+          <div class="findings-body">`;
+
+      // Runtime errors
+      for (const e of agent.errors) {
+        html += `<div class="finding-row">
+          <div class="rule-id">RUNTIME</div>
+          <div><div class="finding-title">${esc(e)}</div></div>
+          <div class="finding-actions"><span class="finding-status badge-ERROR">ERROR</span></div>
+        </div>`;
+      }
+
+      if (agent.findings.length === 0 && agent.errors.length === 0) {
+        html += `<div class="no-findings">No findings recorded.</div>`;
+      } else {
+        for (const f of agent.findings) {
+          const loc = f.file
+            ? `${esc(f.file)}${f.line != null ? ':' + f.line : ''}`
+            : '';
+          const fixable = FIXABLE_RULES.has(f.ruleId) && (f.status === 'FAIL' || f.status === 'WARN');
+          const fixResult = fixResults[f.ruleId];
+
+          let actionHtml = `<span class="finding-status badge-${f.status}">${f.status}</span>`;
+          if (fixable) {
+            if (fixResult === 'applied') {
+              actionHtml += `<span class="fix-tag">✓ Fixed</span>`;
+            } else if (fixResult === 'dry') {
+              actionHtml += `<span class="fix-tag pending">◌ Planned</span>`;
+            } else {
+              actionHtml += `<button class="btn btn-success btn-sm"
+                onclick="singleFix(event,'${esc(f.ruleId)}')">Fix</button>`;
+            }
+          }
+
+          html += `<div class="finding-row">
+            <div class="rule-id">${esc(f.ruleId)}</div>
+            <div>
+              <div class="finding-title">${esc(f.title)}</div>
+              ${loc ? `<div class="finding-location">${loc}</div>` : ''}
+            </div>
+            <div class="finding-actions">${actionHtml}</div>
+            ${f.detail ? `<div class="finding-detail">${esc(f.detail)}</div>` : ''}
+          </div>`;
+        }
+      }
+
+      html += `</div></div>`;
+    }
+
+    document.getElementById('app').innerHTML = html;
+
+    // Show/hide bulk toolbar
+    const hasFixable = FIXABLE_RULES.size > 0;
+    document.getElementById('fixToolbar').style.display = hasFixable ? 'flex' : 'none';
+    updateFixSummary();
+  }
+
+  function renderError(msg) {
+    document.getElementById('app').innerHTML = `
+      <div class="state-msg">
+        <div style="font-size:28px;margin-bottom:8px">⚠️</div>
+        <div style="color:#cf222e;font-weight:600">Failed to load report</div>
+        <div style="margin-top:6px;font-size:13px">${esc(msg)}</div>
+      </div>`;
+  }
+
+  function updateFixSummary() {
+    const applied = Object.values(fixResults).filter(v => v === 'applied').length;
+    const el = document.getElementById('fixSummary');
+    if (el) el.textContent = applied > 0 ? `${applied} fix(es) applied this session` : '';
+  }
+
+  // ---------------------------------------------------------------------------
+  // Interaction
+  // ---------------------------------------------------------------------------
+
+  function toggleSection(el) {
+    el.classList.toggle('open');
+  }
+
+  async function loadReport() {
+    setLoading(['refreshBtn', 'dryRunAllBtn', 'applyAllBtn'], true);
+    document.getElementById('app').innerHTML = `
+      <div class="state-msg">
+        <div class="spinner"></div>
+        <div>Running agents…</div>
+      </div>`;
+
+    try {
+      const res = await fetch('/api/vigil/report');
+      if (!res.ok) throw new Error(`HTTP ${res.status} — ${res.statusText}`);
+      const report = await res.json();
+      await discoverFixable();
+      renderReport(report);
+    } catch (err) {
+      renderError(err.message);
+    } finally {
+      setLoading(['refreshBtn', 'dryRunAllBtn', 'applyAllBtn'], false);
+    }
+  }
+
+  /**
+   * Apply a single fix for one ruleId.
+   * Stops event propagation so it doesn't toggle the section.
+   */
+  async function singleFix(event, ruleId) {
+    event.stopPropagation();
+    setLoading(['refreshBtn', 'dryRunAllBtn', 'applyAllBtn'], true);
+
+    try {
+      const res = await fetch('/api/vigil/fix', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ruleId, dryRun: false }),
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+
+      const r = data.results.find(x => x.ruleIds.includes(ruleId));
+      if (r && r.applicable) {
+        fixResults[ruleId] = 'applied';
+        toast(`Fix applied for ${ruleId}`, 'ok');
+        // Re-discover fixable (state changed) then re-render with updated report
+        await discoverFixable();
+        if (data.report) {
+          renderReport(data.report);
+        } else {
+          await loadReport();
+        }
+      } else {
+        toast(`Patch for ${ruleId} was not applicable — already clean?`, 'warn');
+      }
+    } catch (err) {
+      toast(`Fix failed: ${err.message}`, 'err');
+    } finally {
+      setLoading(['refreshBtn', 'dryRunAllBtn', 'applyAllBtn'], false);
+    }
+  }
+
+  /**
+   * Dry-run or apply all available fixes.
+   */
+  async function bulkFix(isDryRun) {
+    setLoading(['refreshBtn', 'dryRunAllBtn', 'applyAllBtn'], true);
+    const label = isDryRun ? 'dry run' : 'apply';
+
+    try {
+      const res = await fetch('/api/vigil/fix', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ dryRun: isDryRun }),
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+
+      const applicable = data.results.filter(r => r.applicable);
+      const count = applicable.length;
+
+      if (isDryRun) {
+        // Mark affected rules as planned
+        for (const r of applicable) {
+          for (const id of r.ruleIds.split(', ')) fixResults[id.trim()] = 'dry';
+        }
+        toast(`Dry run: ${count} patch(es) would be applied — no files written.`, 'warn');
+        if (lastReport) renderReport(lastReport);   // re-render to show ◌ tags
+      } else {
+        // Mark affected rules as applied
+        for (const r of applicable) {
+          for (const id of r.ruleIds.split(', ')) fixResults[id.trim()] = 'applied';
+        }
+        toast(`${count} fix(es) applied. Re-scanning…`, 'ok');
+        await discoverFixable();
+        if (data.report) {
+          renderReport(data.report);
+        } else {
+          await loadReport();
+        }
+      }
+    } catch (err) {
+      toast(`Bulk ${label} failed: ${err.message}`, 'err');
+    } finally {
+      setLoading(['refreshBtn', 'dryRunAllBtn', 'applyAllBtn'], false);
+    }
+  }
+
+  // Auto-load on page open
+  loadReport();
+</script>
+</body>
+</html>
